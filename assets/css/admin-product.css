@@ -1,0 +1,308 @@
+/* Subscription Product Admin Styles */
+
+/* Subscription Tab Styling */
+.wc-tabs li.subscription_options a:before {
+    content: "\f463";
+}
+
+.wc-tabs li.subscription_tab a:before {
+    content: "\f463";
+}
+
+/* Subscription Panel Styling */
+#subs_subscription_product_data h3 {
+    margin: 0 0 15px 0;
+    padding: 0;
+    color: #333;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+#subs_subscription_product_data h4 {
+    margin: 20px 0 10px 0;
+    padding: 0 0 5px 0;
+    color: #333;
+    font-size: 13px;
+    font-weight: 600;
+    border-bottom: 1px solid #eee;
+}
+
+/* Conditional Fields Styling */
+.subs-conditional-fields {
+    background: #f9f9f9;
+    border: 1px solid #e5e5e5;
+    border-radius: 3px;
+    padding: 15px;
+    margin: 10px 0;
+}
+
+.subs-conditional-fields .options_group {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0 0 15px 0;
+}
+
+.subs-conditional-fields .options_group:last-child {
+    margin-bottom: 0;
+}
+
+/* Preview Container */
+.subs-preview-container {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    margin: 10px 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.subs-preview-content {
+    font-size: 13px;
+}
+
+.subs-preview-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.subs-preview-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.subs-preview-label {
+    font-weight: 600;
+    color: #333;
+}
+
+.subs-preview-value {
+    color: #666;
+    text-align: right;
+}
+
+.subs-preview-highlight {
+    background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+    border: 1px solid #007cba;
+    border-radius: 4px;
+    padding: 12px;
+    margin: 15px 0 10px 0;
+    text-align: center;
+    font-weight: 600;
+    color: #007cba;
+}
+
+/* Loading and Error States */
+.subs-loading {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    font-style: italic;
+}
+
+.subs-loading:before {
+    content: "\f110";
+    font-family: dashicons;
+    animation: spin 1s linear infinite;
+    margin-right: 5px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.subs-error {
+    background: #fff0f0;
+    border: 1px solid #dc3232;
+    border-radius: 3px;
+    padding: 10px;
+    color: #dc3232;
+    text-align: center;
+}
+
+/* Product List Column */
+.column-subscription {
+    width: 80px;
+    text-align: center;
+}
+
+.subs-enabled-indicator {
+    color: #46b450;
+    font-size: 16px;
+    cursor: help;
+}
+
+.subs-disabled-indicator {
+    color: #ddd;
+    font-size: 16px;
+}
+
+/* Quick Edit and Bulk Edit */
+.inline-edit-group .subs-subscription-fields {
+    margin-top: 10px;
+}
+
+/* Variation Subscription Fields */
+.subs-variation-fields {
+    background: #f9f9f9;
+    border: 1px solid #e5e5e5;
+    border-radius: 3px;
+    padding: 10px;
+    margin: 10px 0;
+}
+
+.subs-variation-enabled {
+    background: #f0f8ff !important;
+    border-left: 3px solid #007cba;
+}
+
+/* Title Indicators */
+.subs-title-indicator {
+    background: #007cba;
+    color: white;
+    font-size: 10px;
+    font-weight: normal;
+    padding: 2px 6px;
+    border-radius: 2px;
+    margin-left: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Billing Period Display */
+.subs-billing-period {
+    color: #666;
+    font-size: 0.9em;
+    font-weight: normal;
+    font-style: italic;
+}
+
+/* Enhanced Form Fields */
+.subs-conditional-fields .form-field {
+    margin-bottom: 15px;
+}
+
+.subs-conditional-fields .form-field label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.subs-conditional-fields .form-field .description {
+    color: #666;
+    font-size: 12px;
+    margin-top: 5px;
+    font-style: italic;
+}
+
+/* Tab Icon Enhancement */
+.wc-tabs li.subscription_tab a {
+    position: relative;
+}
+
+.wc-tabs li.subscription_tab.active a {
+    color: #007cba;
+}
+
+.wc-tabs li.subscription_tab.active a:before {
+    color: #007cba;
+}
+
+/* Responsive Adjustments */
+@media screen and (max-width: 782px) {
+    .subs-preview-item {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .subs-preview-value {
+        text-align: left;
+        margin-top: 5px;
+        font-weight: 600;
+    }
+
+    .column-subscription {
+        display: none;
+    }
+}
+
+/* Accessibility Improvements */
+.subs-conditional-fields input:focus,
+.subs-conditional-fields select:focus,
+.subs-conditional-fields textarea:focus {
+    border-color: #007cba;
+    box-shadow: 0 0 0 1px #007cba;
+    outline: none;
+}
+
+/* Success States */
+.subs-preview-success {
+    background: #f0fff4;
+    border: 1px solid #46b450;
+    border-radius: 4px;
+    padding: 10px;
+    color: #46b450;
+    text-align: center;
+    margin: 10px 0;
+}
+
+/* Field Groups */
+.subs-field-group {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 3px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.subs-field-group h5 {
+    margin: 0 0 10px 0;
+    padding: 0;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #666;
+}
+
+/* Pro Feature Indicators */
+.subs-pro-feature {
+    opacity: 0.6;
+    position: relative;
+}
+
+.subs-pro-feature:after {
+    content: "PRO";
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: #ff6900;
+    color: white;
+    font-size: 9px;
+    padding: 2px 4px;
+    border-radius: 2px;
+    font-weight: bold;
+}
+
+/* Help Text Styling */
+.subs-help-text {
+    background: #e8f5e8;
+    border-left: 3px solid #46b450;
+    padding: 10px 15px;
+    margin: 15px 0;
+    color: #333;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.subs-help-text .dashicons {
+    color: #46b450;
+    margin-right: 5px;
+    vertical-align: middle;
+}

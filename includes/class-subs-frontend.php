@@ -219,7 +219,7 @@ class Subs_Frontend {
         $stripe_fee = $stripe->calculate_stripe_fee($base_price);
         $total_price = $base_price + $stripe_fee;
 
-        $this->load_template('product/subscription-options.php', array(
+        $this->load_template('single-product/subscription-options.php', array(
             'product' => $product,
             'subscription_data' => $subscription_data,
             'base_price' => $base_price,

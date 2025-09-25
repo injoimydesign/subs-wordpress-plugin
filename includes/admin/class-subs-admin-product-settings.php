@@ -3,6 +3,7 @@
  * Product Settings Integration
  *
  * Handles subscription settings integration with WooCommerce products
+ * Allows any WooCommerce product to be converted into a subscription product
  *
  * @package Subs
  * @version 1.0.0
@@ -39,8 +40,9 @@ class Subs_Admin_Product_Settings {
         // Save subscription product fields
         add_action('woocommerce_process_product_meta', array($this, 'save_subscription_product_fields'));
 
-        // Add subscription fields to general tab (alternative display)
-        add_action('woocommerce_product_options_general_product_data', array($this, 'add_general_subscription_fields'));
+        // Add subscription fields to variations
+        add_action('woocommerce_product_after_variable_attributes', array($this, 'add_variation_subscription_fields'), 10, 3);
+        add_action('woocommerce_save_product_variation', array($this, 'save_variation_subscription_fields'), 10, 2);
 
         // Admin scripts and styles
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
@@ -62,6 +64,13 @@ class Subs_Admin_Product_Settings {
 
         // AJAX handlers
         add_action('wp_ajax_subs_preview_subscription_settings', array($this, 'preview_subscription_settings'));
+        add_action('wp_ajax_subs_get_subscription_plans', array($this, 'get_subscription_plans'));
+
+        // Add subscription indicator to product title
+        add_filter('the_title', array($this, 'add_subscription_indicator_to_title'), 10, 2);
+
+        // Price display modifications for subscription products
+        add_filter('woocommerce_get_price_html', array($this, 'modify_subscription_price_display'), 10, 2);
     }
 
     /**
@@ -93,6 +102,8 @@ class Subs_Admin_Product_Settings {
         $subscription_interval = get_post_meta($post->ID, '_subscription_period_interval', true) ?: '1';
         $trial_period = get_post_meta($post->ID, '_subscription_trial_period', true) ?: '';
         $signup_fee = get_post_meta($post->ID, '_subscription_signup_fee', true) ?: '';
+        $subscription_limit = get_post_meta($post->ID, '_subscription_limit', true) ?: '';
+        $subscription_length = get_post_meta($post->ID, '_subscription_length', true) ?: '';
 
         ?>
         <div id='subs_subscription_product_data' class='panel woocommerce_options_panel'>
@@ -104,7 +115,7 @@ class Subs_Admin_Product_Settings {
                     'id'          => '_subscription_enabled',
                     'value'       => $subscription_enabled,
                     'label'       => __('Enable Subscription', 'subs'),
-                    'description' => __('Allow this product to be purchased as a subscription.', 'subs'),
+                    'description' => __('Convert this product into a subscription product that charges customers on a recurring basis.', 'subs'),
                 ));
                 ?>
             </div>
@@ -112,65 +123,64 @@ class Subs_Admin_Product_Settings {
             <div class="options_group subs-conditional-fields" style="<?php echo $subscription_enabled === 'yes' ? '' : 'display:none;'; ?>">
                 <h4><?php _e('Billing Schedule', 'subs'); ?></h4>
 
-                <div class="subs-billing-schedule-wrapper">
-                    <p class="form-field">
-                        <label><?php _e('Subscription Billing', 'subs'); ?></label>
+                <?php
+                woocommerce_wp_select(array(
+                    'id'          => '_subscription_period_interval',
+                    'label'       => __('Billing Interval', 'subs'),
+                    'description' => __('Charge every X period(s)', 'subs'),
+                    'value'       => $subscription_interval,
+                    'options'     => array(
+                        '1'  => __('1', 'subs'),
+                        '2'  => __('2', 'subs'),
+                        '3'  => __('3', 'subs'),
+                        '4'  => __('4', 'subs'),
+                        '5'  => __('5', 'subs'),
+                        '6'  => __('6', 'subs'),
+                        '12' => __('12', 'subs'),
+                    ),
+                ));
 
-                        <span class="subs-billing-inputs">
-                            <?php _e('Every', 'subs'); ?>
+                woocommerce_wp_select(array(
+                    'id'          => '_subscription_period',
+                    'label'       => __('Billing Period', 'subs'),
+                    'description' => __('The billing period for the subscription', 'subs'),
+                    'value'       => $subscription_period,
+                    'options'     => array(
+                        'day'   => __('Day(s)', 'subs'),
+                        'week'  => __('Week(s)', 'subs'),
+                        'month' => __('Month(s)', 'subs'),
+                        'year'  => __('Year(s)', 'subs'),
+                    ),
+                ));
+                ?>
+            </div>
 
-                            <input type="number"
-                                   name="_subscription_period_interval"
-                                   id="_subscription_period_interval"
-                                   value="<?php echo esc_attr($subscription_interval); ?>"
-                                   min="1"
-                                   step="1"
-                                   class="short"
-                                   style="width: 80px;" />
-
-                            <select name="_subscription_period" id="_subscription_period" class="short">
-                                <option value="day" <?php selected($subscription_period, 'day'); ?>><?php _e('Day(s)', 'subs'); ?></option>
-                                <option value="week" <?php selected($subscription_period, 'week'); ?>><?php _e('Week(s)', 'subs'); ?></option>
-                                <option value="month" <?php selected($subscription_period, 'month'); ?>><?php _e('Month(s)', 'subs'); ?></option>
-                                <option value="year" <?php selected($subscription_period, 'year'); ?>><?php _e('Year(s)', 'subs'); ?></option>
-                            </select>
-                        </span>
-
-                        <span class="description" id="subs-billing-description">
-                            <?php echo $this->get_billing_description($subscription_period, $subscription_interval); ?>
-                        </span>
-                    </p>
-                </div>
+            <div class="options_group subs-conditional-fields" style="<?php echo $subscription_enabled === 'yes' ? '' : 'display:none;'; ?>">
+                <h4><?php _e('Trial Period & Fees', 'subs'); ?></h4>
 
                 <?php
-                // Trial period
-                if ('yes' === get_option('subs_enable_trials', 'no')) {
-                    woocommerce_wp_text_input(array(
-                        'id'                => '_subscription_trial_period',
-                        'value'             => $trial_period,
-                        'label'             => __('Free Trial', 'subs'),
-                        'description'       => __('Number of days for free trial period (leave empty for no trial).', 'subs'),
-                        'type'              => 'number',
-                        'custom_attributes' => array(
-                            'min'  => '0',
-                            'step' => '1',
-                        ),
-                        'desc_tip'          => true,
-                    ));
-                }
-
-                // Signup fee
                 woocommerce_wp_text_input(array(
-                    'id'          => '_subscription_signup_fee',
-                    'value'       => $signup_fee,
-                    'label'       => __('Sign-up Fee', 'subs') . ' (' . get_woocommerce_currency_symbol() . ')',
-                    'description' => __('Optional one-time fee charged at signup (in addition to the recurring subscription price).', 'subs'),
-                    'type'        => 'number',
+                    'id'                => '_subscription_trial_period',
+                    'label'             => __('Trial Period (Days)', 'subs'),
+                    'description'       => __('Number of days for the free trial period (0 for no trial)', 'subs'),
+                    'value'             => $trial_period,
+                    'type'              => 'number',
+                    'custom_attributes' => array(
+                        'min'  => '0',
+                        'step' => '1',
+                    ),
+                ));
+
+                woocommerce_wp_text_input(array(
+                    'id'                => '_subscription_signup_fee',
+                    'label'             => __('Sign-up Fee (' . get_woocommerce_currency_symbol() . ')', 'subs'),
+                    'description'       => __('One-time fee charged when the subscription starts', 'subs'),
+                    'value'             => $signup_fee,
+                    'type'              => 'number',
                     'custom_attributes' => array(
                         'min'  => '0',
                         'step' => '0.01',
                     ),
-                    'desc_tip'    => true,
                 ));
                 ?>
             </div>
@@ -180,114 +190,217 @@ class Subs_Admin_Product_Settings {
 
                 <?php
                 woocommerce_wp_text_input(array(
-                    'id'                => '_subscription_limit',
-                    'value'             => get_post_meta($post->ID, '_subscription_limit', true),
-                    'label'             => __('Subscription Limit', 'subs'),
-                    'description'       => __('Maximum number of times this subscription can be purchased (leave empty for unlimited).', 'subs'),
+                    'id'                => '_subscription_length',
+                    'label'             => __('Subscription Length', 'subs'),
+                    'description'       => __('Number of billing cycles (0 for unlimited)', 'subs'),
+                    'value'             => $subscription_length,
                     'type'              => 'number',
                     'custom_attributes' => array(
-                        'min'  => '1',
+                        'min'  => '0',
                         'step' => '1',
                     ),
-                    'desc_tip'          => true,
                 ));
 
                 woocommerce_wp_text_input(array(
-                    'id'                => '_subscription_length',
-                    'value'             => get_post_meta($post->ID, '_subscription_length', true),
-                    'label'             => __('Subscription Length', 'subs'),
-                    'description'       => __('Number of billing cycles before subscription expires (leave empty for never-ending).', 'subs'),
+                    'id'                => '_subscription_limit',
+                    'label'             => __('Limit per Customer', 'subs'),
+                    'description'       => __('Maximum active subscriptions per customer (0 for unlimited)', 'subs'),
+                    'value'             => $subscription_limit,
                     'type'              => 'number',
                     'custom_attributes' => array(
-                        'min'  => '1',
+                        'min'  => '0',
                         'step' => '1',
                     ),
-                    'desc_tip'          => true,
                 ));
                 ?>
             </div>
 
             <div class="options_group subs-conditional-fields" style="<?php echo $subscription_enabled === 'yes' ? '' : 'display:none;'; ?>">
-                <h4><?php _e('Subscription Options', 'subs'); ?></h4>
+                <h4><?php _e('Advanced Options', 'subs'); ?></h4>
 
                 <?php
                 woocommerce_wp_checkbox(array(
                     'id'          => '_subscription_one_time_shipping',
-                    'value'       => get_post_meta($post->ID, '_subscription_one_time_shipping', true),
-                    'label'       => __('One Time Shipping', 'subs'),
-                    'description' => __('Charge shipping only on the first order (not on recurring payments).', 'subs'),
+                    'label'       => __('One-time Shipping', 'subs'),
+                    'description' => __('Charge shipping only on the first order', 'subs'),
                 ));
 
                 woocommerce_wp_checkbox(array(
                     'id'          => '_subscription_prorate_renewal',
-                    'value'       => get_post_meta($post->ID, '_subscription_prorate_renewal', true),
                     'label'       => __('Prorate Renewals', 'subs'),
-                    'description' => __('Prorate the first renewal payment if subscription starts mid-cycle.', 'subs'),
+                    'description' => __('Prorate charges when subscription is changed mid-cycle', 'subs'),
                 ));
 
                 woocommerce_wp_checkbox(array(
                     'id'          => '_subscription_virtual_required',
-                    'value'       => get_post_meta($post->ID, '_subscription_virtual_required', true),
                     'label'       => __('Force Virtual Product', 'subs'),
-                    'description' => __('Always treat this subscription as a virtual product (no shipping required).', 'subs'),
+                    'description' => __('Automatically mark subscription orders as virtual', 'subs'),
                 ));
+
+                // Only show Stripe fee option if Stripe is configured
+                if ($this->is_stripe_configured()) :
+                    $sample_fee = $this->calculate_sample_stripe_fee($product ? $product->get_price() : 10);
+
+                    woocommerce_wp_checkbox(array(
+                        'id'          => '_subscription_include_stripe_fees',
+                        'value'       => get_post_meta($post->ID, '_subscription_include_stripe_fees', true) ?: 'no',
+                        'label'       => __('Pass Stripe Fees to Customer', 'subs'),
+                        'description' => sprintf(
+                            __('Add Stripe processing fees to subscription price. (Example: %s fee on %s)', 'subs'),
+                            wc_price($sample_fee),
+                            wc_price($product ? $product->get_price() : 10)
+                        ),
+                    ));
+                endif;
                 ?>
             </div>
 
-            <?php if ('yes' === get_option('subs_pass_stripe_fees', 'no')): ?>
             <div class="options_group subs-conditional-fields" style="<?php echo $subscription_enabled === 'yes' ? '' : 'display:none;'; ?>">
-                <h4><?php _e('Fee Settings', 'subs'); ?></h4>
-
-                <?php
-                $stripe = new Subs_Stripe();
-                $sample_fee = $stripe->calculate_stripe_fee($product ? $product->get_price() : 10);
-
-                woocommerce_wp_checkbox(array(
-                    'id'          => '_subscription_include_stripe_fees',
-                    'value'       => get_post_meta($post->ID, '_subscription_include_stripe_fees', true) ?: 'yes',
-                    'label'       => __('Include Stripe Fees', 'subs'),
-                    'description' => sprintf(
-                        __('Add Stripe processing fees to subscription price. (Example: %s fee on %s)', 'subs'),
-                        wc_price($sample_fee),
-                        wc_price($product ? $product->get_price() : 10)
-                    ),
-                ));
-                ?>
-            </div>
-            <?php endif; ?>
-
-            <div class="options_group subs-conditional-fields" style="<?php echo $subscription_enabled === 'yes' ? '' : 'display:none;'; ?>">
-                <h4><?php _e('Preview', 'subs'); ?></h4>
-                <div id="subs-subscription-preview">
+                <h4><?php _e('Subscription Preview', 'subs'); ?></h4>
+                <div id="subs-subscription-preview" class="subs-preview-container">
                     <?php $this->render_subscription_preview($post->ID); ?>
                 </div>
             </div>
+
+            <div class="options_group subs-conditional-fields" style="<?php echo $subscription_enabled === 'yes' ? '' : 'display:none;'; ?>">
+                <h4><?php _e('Customer Display Options', 'subs'); ?></h4>
+
+                <?php
+                woocommerce_wp_textarea_input(array(
+                    'id'          => '_subscription_description',
+                    'label'       => __('Subscription Description', 'subs'),
+                    'description' => __('Description shown to customers about this subscription', 'subs'),
+                    'value'       => get_post_meta($post->ID, '_subscription_description', true),
+                    'rows'        => 3,
+                ));
+
+                woocommerce_wp_textarea_input(array(
+                    'id'          => '_subscription_benefits',
+                    'label'       => __('Subscription Benefits', 'subs'),
+                    'description' => __('Benefits shown to customers (one per line)', 'subs'),
+                    'value'       => get_post_meta($post->ID, '_subscription_benefits', true),
+                    'rows'        => 4,
+                ));
+                ?>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+        jQuery(document).ready(function($) {
+            // Toggle subscription fields
+            $('#_subscription_enabled').change(function() {
+                if ($(this).is(':checked')) {
+                    $('.subs-conditional-fields').slideDown();
+                } else {
+                    $('.subs-conditional-fields').slideUp();
+                }
+            });
+
+            // Update preview when fields change
+            $('.subs-conditional-fields input, .subs-conditional-fields select, .subs-conditional-fields textarea').on('change keyup', function() {
+                updateSubscriptionPreview();
+            });
+
+            function updateSubscriptionPreview() {
+                var data = {
+                    action: 'subs_preview_subscription_settings',
+                    nonce: '<?php echo wp_create_nonce('subs_product_admin'); ?>',
+                    product_id: <?php echo $post->ID; ?>,
+                    _subscription_period: $('#_subscription_period').val(),
+                    _subscription_period_interval: $('#_subscription_period_interval').val(),
+                    _subscription_trial_period: $('#_subscription_trial_period').val(),
+                    _subscription_signup_fee: $('#_subscription_signup_fee').val(),
+                    _subscription_length: $('#_subscription_length').val(),
+                    _subscription_include_stripe_fees: $('#_subscription_include_stripe_fees').is(':checked') ? 'yes' : 'no'
+                };
+
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: data,
+                    success: function(response) {
+                        if (response.success) {
+                            $('#subs-subscription-preview').html(response.data.preview);
+                        }
+                    }
+                });
+            }
+        });
+        </script>
+
+        <style>
+        .subs-preview-container {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .subs-preview-item {
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .subs-preview-label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .subs-preview-value {
+            color: #666;
+        }
+
+        .subs-preview-highlight {
+            background: #fff;
+            padding: 8px;
+            border-left: 3px solid #007cba;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .subs-conditional-fields h4 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        </style>
+        <?php
+    }
+
+    /**
+     * Add subscription fields to product variations
+     *
+     * @param int $loop
+     * @param array $variation_data
+     * @param WP_Post $variation
+     */
+    public function add_variation_subscription_fields($loop, $variation_data, $variation) {
+        $variation_subscription_enabled = get_post_meta($variation->ID, '_subscription_enabled', true);
+        ?>
+        <div class="subs-variation-fields">
+            <p class="form-row form-row-full">
+                <label>
+                    <input type="checkbox" name="_subscription_enabled[<?php echo $loop; ?>]" value="yes" <?php checked($variation_subscription_enabled, 'yes'); ?> />
+                    <?php _e('Enable subscription for this variation', 'subs'); ?>
+                </label>
+            </p>
         </div>
         <?php
     }
 
     /**
-     * Add subscription fields to general tab (alternative display)
+     * Save variation subscription fields
+     *
+     * @param int $variation_id
+     * @param int $i
      */
-    public function add_general_subscription_fields() {
-        global $post;
-
-        // Only show if the subscription tab is not being used
-        $display_location = get_option('subs_subscription_display_location', 'tab');
-        if ($display_location === 'tab') {
-            return;
-        }
-
-        echo '<div class="options_group subs-general-fields">';
-        echo '<h3>' . __('Subscription Options', 'subs') . '</h3>';
-
-        woocommerce_wp_checkbox(array(
-            'id'          => '_subscription_enabled',
-            'label'       => __('Enable Subscription', 'subs'),
-            'description' => __('Allow this product to be purchased as a subscription', 'subs'),
-        ));
-
-        echo '</div>';
+    public function save_variation_subscription_fields($variation_id, $i) {
+        $subscription_enabled = isset($_POST['_subscription_enabled'][$i]) ? 'yes' : 'no';
+        update_post_meta($variation_id, '_subscription_enabled', $subscription_enabled);
     }
 
     /**
@@ -318,6 +431,8 @@ class Subs_Admin_Product_Settings {
             '_subscription_prorate_renewal'      => 'string',
             '_subscription_virtual_required'     => 'string',
             '_subscription_include_stripe_fees'  => 'string',
+            '_subscription_description'          => 'textarea',
+            '_subscription_benefits'             => 'textarea',
         );
 
         foreach ($fields as $field => $type) {
@@ -329,6 +444,9 @@ class Subs_Admin_Product_Settings {
                     break;
                 case 'float':
                     $value = $value !== '' ? floatval($value) : '';
+                    break;
+                case 'textarea':
+                    $value = sanitize_textarea_field($value);
                     break;
                 case 'string':
                 default:
@@ -347,29 +465,30 @@ class Subs_Admin_Product_Settings {
         $subscription_enabled = isset($_POST['_subscription_enabled']) ? 'yes' : 'no';
         update_post_meta($post_id, '_subscription_enabled', $subscription_enabled);
 
-        // If subscription is enabled, ensure required fields have defaults
+        // If subscription is enabled, ensure we have some required fields
         if ($subscription_enabled === 'yes') {
-            if (!get_post_meta($post_id, '_subscription_period', true)) {
+            $period = get_post_meta($post_id, '_subscription_period', true);
+            $interval = get_post_meta($post_id, '_subscription_period_interval', true);
+
+            if (!$period) {
                 update_post_meta($post_id, '_subscription_period', 'month');
             }
-            if (!get_post_meta($post_id, '_subscription_period_interval', true)) {
+            if (!$interval) {
                 update_post_meta($post_id, '_subscription_period_interval', '1');
             }
         }
 
-        // Clear any cached subscription data
-        delete_transient('subs_product_' . $post_id . '_subscription_data');
-
-        do_action('subs_product_subscription_settings_saved', $post_id);
+        // Hook for additional processing
+        do_action('subs_product_subscription_settings_saved', $post_id, $_POST);
     }
 
     /**
-     * Enqueue admin scripts for product editing
+     * Enqueue admin scripts
      *
      * @param string $hook
      */
     public function enqueue_admin_scripts($hook) {
-        if (!in_array($hook, array('post.php', 'post-new.php'))) {
+        if (!in_array($hook, array('post.php', 'post-new.php', 'edit.php'))) {
             return;
         }
 
@@ -378,48 +497,46 @@ class Subs_Admin_Product_Settings {
             return;
         }
 
+        wp_enqueue_style(
+            'subs-product-admin',
+            SUBS_PLUGIN_URL . 'assets/css/admin-product.css',
+            array(),
+            SUBS_VERSION
+        );
+
         wp_enqueue_script(
             'subs-product-admin',
-            SUBS_PLUGIN_URL . 'assets/js/product-admin.js',
-            array('jquery', 'wc-enhanced-select'),
+            SUBS_PLUGIN_URL . 'assets/js/admin-product.js',
+            array('jquery', 'wc-admin-meta-boxes'),
             SUBS_VERSION,
             true
         );
 
         wp_localize_script('subs-product-admin', 'subs_product_admin', array(
             'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce'    => wp_create_nonce('subs_product_admin'),
-            'strings'  => array(
-                'preview_loading' => __('Loading preview...', 'subs'),
-                'preview_error'   => __('Error loading preview', 'subs'),
-            ),
+            'nonce' => wp_create_nonce('subs_product_admin'),
+            'strings' => array(
+                'preview_loading' => __('Updating preview...', 'subs'),
+                'preview_error' => __('Error updating preview', 'subs'),
+            )
         ));
-
-        wp_enqueue_style(
-            'subs-product-admin',
-            SUBS_PLUGIN_URL . 'assets/css/product-admin.css',
-            array(),
-            SUBS_VERSION
-        );
     }
 
     /**
-     * Add columns to product list table
+     * Add subscription column to product list
      *
      * @param array $columns
      * @return array
      */
     public function add_product_list_columns($columns) {
+        // Add subscription column after the product type column
         $new_columns = array();
-
         foreach ($columns as $key => $column) {
             $new_columns[$key] = $column;
-
             if ($key === 'product_type') {
                 $new_columns['subscription'] = __('Subscription', 'subs');
             }
         }
-
         return $new_columns;
     }
 
@@ -430,19 +547,21 @@ class Subs_Admin_Product_Settings {
      * @param int $post_id
      */
     public function display_product_list_columns($column, $post_id) {
-        if ($column === 'subscription') {
-            $subscription_enabled = get_post_meta($post_id, '_subscription_enabled', true);
+        if ($column !== 'subscription') {
+            return;
+        }
 
-            if ($subscription_enabled === 'yes') {
-                $period = get_post_meta($post_id, '_subscription_period', true) ?: 'month';
-                $interval = get_post_meta($post_id, '_subscription_period_interval', true) ?: 1;
+        $subscription_enabled = get_post_meta($post_id, '_subscription_enabled', true);
 
-                echo '<span class="subs-enabled-indicator" title="' . esc_attr($this->get_billing_description($period, $interval)) . '">';
-                echo '<span class="dashicons dashicons-update"></span>';
-                echo '</span>';
-            } else {
-                echo '<span class="subs-disabled-indicator">—</span>';
-            }
+        if ($subscription_enabled === 'yes') {
+            $period = get_post_meta($post_id, '_subscription_period', true) ?: 'month';
+            $interval = get_post_meta($post_id, '_subscription_period_interval', true) ?: 1;
+
+            echo '<span class="subs-enabled-indicator" title="' . esc_attr($this->get_billing_description($period, $interval)) . '">';
+            echo '<span class="dashicons dashicons-update"></span>';
+            echo '</span>';
+        } else {
+            echo '<span class="subs-disabled-indicator">—</span>';
         }
     }
 
@@ -501,9 +620,11 @@ class Subs_Admin_Product_Settings {
             $('#the-list').on('click', '.editinline', function() {
                 var post_id = $(this).closest('tr').attr('id').replace('post-', '');
                 var $inline_data = $('#woocommerce_inline_' + post_id);
-                var subscription_enabled = $inline_data.find('.subscription_enabled').text();
 
-                $('input[name="_subscription_enabled"]', '.inline-edit-row').prop('checked', subscription_enabled === 'yes');
+                if ($inline_data.length) {
+                    var subscription_enabled = $inline_data.find('.subscription_enabled').text();
+                    $('input[name="_subscription_enabled"]', '.inline-edit-row').prop('checked', subscription_enabled === 'yes');
+                }
             });
         });
         </script>
@@ -545,6 +666,8 @@ class Subs_Admin_Product_Settings {
             '_subscription_prorate_renewal',
             '_subscription_virtual_required',
             '_subscription_include_stripe_fees',
+            '_subscription_description',
+            '_subscription_benefits',
         );
 
         foreach ($subscription_meta_keys as $meta_key) {
@@ -553,6 +676,56 @@ class Subs_Admin_Product_Settings {
                 $duplicate->update_meta_data($meta_key, $meta_value);
             }
         }
+    }
+
+    /**
+     * Add subscription indicator to product title in admin
+     *
+     * @param string $title
+     * @param int $id
+     * @return string
+     */
+    public function add_subscription_indicator_to_title($title, $id) {
+        if (!is_admin() || !$id) {
+            return $title;
+        }
+
+        $post = get_post($id);
+        if (!$post || $post->post_type !== 'product') {
+            return $title;
+        }
+
+        $subscription_enabled = get_post_meta($id, '_subscription_enabled', true);
+        if ($subscription_enabled === 'yes') {
+            $title .= ' <span class="subs-title-indicator">[' . __('Subscription', 'subs') . ']</span>';
+        }
+
+        return $title;
+    }
+
+    /**
+     * Modify price display for subscription products
+     *
+     * @param string $price_html
+     * @param WC_Product $product
+     * @return string
+     */
+    public function modify_subscription_price_display($price_html, $product) {
+        if (!is_admin()) {
+            return $price_html;
+        }
+
+        $subscription_enabled = $product->get_meta('_subscription_enabled', true);
+        if ($subscription_enabled !== 'yes') {
+            return $price_html;
+        }
+
+        $period = $product->get_meta('_subscription_period', true) ?: 'month';
+        $interval = $product->get_meta('_subscription_period_interval', true) ?: 1;
+
+        $billing_description = $this->get_billing_description($period, $interval);
+
+        return $price_html . ' <span class="subs-billing-period">/ ' . $billing_description . '</span>';
     }
 
     /**
@@ -575,6 +748,29 @@ class Subs_Admin_Product_Settings {
 
         wp_send_json_success(array(
             'preview' => $preview_html,
+        ));
+    }
+
+    /**
+     * AJAX get subscription plans
+     */
+    public function get_subscription_plans() {
+        check_ajax_referer('subs_product_admin', 'nonce');
+
+        if (!current_user_can('edit_products')) {
+            wp_send_json_error(__('Permission denied', 'subs'));
+        }
+
+        $product_id = isset($_POST['product_id']) ? absint($_POST['product_id']) : 0;
+
+        if (!$product_id) {
+            wp_send_json_error(__('Invalid product ID', 'subs'));
+        }
+
+        $plans = $this->get_product_subscription_plans($product_id);
+
+        wp_send_json_success(array(
+            'plans' => $plans,
         ));
     }
 
@@ -609,207 +805,230 @@ class Subs_Admin_Product_Settings {
             floatval($override_data['_subscription_signup_fee']) :
             floatval(get_post_meta($product_id, '_subscription_signup_fee', true) ?: 0);
 
+        $length = isset($override_data['_subscription_length']) ?
+            intval($override_data['_subscription_length']) :
+            intval(get_post_meta($product_id, '_subscription_length', true) ?: 0);
+
+        $include_stripe_fees = isset($override_data['_subscription_include_stripe_fees']) ?
+            $override_data['_subscription_include_stripe_fees'] :
+            get_post_meta($product_id, '_subscription_include_stripe_fees', true);
+
+        // Calculate pricing
         $base_price = $product->get_price();
-        $stripe = new Subs_Stripe();
-        $stripe_fee = $stripe->calculate_stripe_fee($base_price);
-        $total_price = $base_price + $stripe_fee;
+        $stripe_fee = 0;
 
-        ob_start();
-        ?>
-        <div class="subs-preview-content">
-            <h5><?php _e('Customer will see:', 'subs'); ?></h5>
+        if ($include_stripe_fees === 'yes' && $this->is_stripe_configured()) {
+            $stripe_fee = $this->calculate_sample_stripe_fee($base_price);
+        }
 
-            <div class="subs-preview-pricing">
-                <div class="price"><?php echo wc_price($total_price); ?></div>
-                <div class="billing-period"><?php echo esc_html($this->get_billing_description($period, $interval)); ?></div>
+        $total_recurring_price = $base_price + $stripe_fee;
 
-                <?php if ($trial_period > 0): ?>
-                <div class="trial-info">
-                    <?php printf(_n('with %d day free trial', 'with %d days free trial', $trial_period, 'subs'), $trial_period); ?>
-                </div>
-                <?php endif; ?>
+        // Build preview HTML
+        $preview = '<div class="subs-preview-content">';
 
-                <?php if ($signup_fee > 0): ?>
-                <div class="signup-fee">
-                    <?php printf(__('+ %s signup fee', 'subs'), wc_price($signup_fee)); ?>
-                </div>
-                <?php endif; ?>
-            </div>
+        // Billing schedule
+        $billing_description = $this->get_billing_description($period, $interval);
+        $preview .= '<div class="subs-preview-item">';
+        $preview .= '<span class="subs-preview-label">' . __('Billing Schedule:', 'subs') . '</span>';
+        $preview .= '<span class="subs-preview-value">Every ' . $billing_description . '</span>';
+        $preview .= '</div>';
 
-            <div class="subs-preview-details">
-                <h6><?php _e('Subscription Details:', 'subs'); ?></h6>
-                <ul>
-                    <li><strong><?php _e('Product Price:', 'subs'); ?></strong> <?php echo wc_price($base_price); ?></li>
-                    <?php if ($stripe_fee > 0): ?>
-                    <li><strong><?php _e('Processing Fee:', 'subs'); ?></strong> <?php echo wc_price($stripe_fee); ?></li>
-                    <?php endif; ?>
-                    <li><strong><?php _e('Total per billing cycle:', 'subs'); ?></strong> <?php echo wc_price($total_price); ?></li>
-                    <li><strong><?php _e('Billing frequency:', 'subs'); ?></strong> <?php echo esc_html($this->get_billing_description($period, $interval)); ?></li>
-                    <?php if ($trial_period > 0): ?>
-                    <li><strong><?php _e('Trial period:', 'subs'); ?></strong> <?php printf(_n('%d day', '%d days', $trial_period, 'subs'), $trial_period); ?></li>
-                    <?php endif; ?>
-                </ul>
-            </div>
-        </div>
-        <?php
-        return ob_get_clean();
+        // Recurring price
+        $preview .= '<div class="subs-preview-item">';
+        $preview .= '<span class="subs-preview-label">' . __('Recurring Price:', 'subs') . '</span>';
+        $preview .= '<span class="subs-preview-value">' . wc_price($total_recurring_price) . '</span>';
+        $preview .= '</div>';
+
+        // Stripe fee breakdown
+        if ($stripe_fee > 0) {
+            $preview .= '<div class="subs-preview-item">';
+            $preview .= '<span class="subs-preview-label">' . __('Processing Fee:', 'subs') . '</span>';
+            $preview .= '<span class="subs-preview-value">' . wc_price($stripe_fee) . '</span>';
+            $preview .= '</div>';
+        }
+
+        // Trial period
+        if ($trial_period > 0) {
+            $preview .= '<div class="subs-preview-item">';
+            $preview .= '<span class="subs-preview-label">' . __('Trial Period:', 'subs') . '</span>';
+            $preview .= '<span class="subs-preview-value">' . sprintf(_n('%d day', '%d days', $trial_period, 'subs'), $trial_period) . '</span>';
+            $preview .= '</div>';
+        }
+
+        // Sign-up fee
+        if ($signup_fee > 0) {
+            $preview .= '<div class="subs-preview-item">';
+            $preview .= '<span class="subs-preview-label">' . __('Sign-up Fee:', 'subs') . '</span>';
+            $preview .= '<span class="subs-preview-value">' . wc_price($signup_fee) . '</span>';
+            $preview .= '</div>';
+        }
+
+        // Subscription length
+        if ($length > 0) {
+            $preview .= '<div class="subs-preview-item">';
+            $preview .= '<span class="subs-preview-label">' . __('Subscription Length:', 'subs') . '</span>';
+            $preview .= '<span class="subs-preview-value">' . sprintf(_n('%d billing cycle', '%d billing cycles', $length, 'subs'), $length) . '</span>';
+            $preview .= '</div>';
+        } else {
+            $preview .= '<div class="subs-preview-item">';
+            $preview .= '<span class="subs-preview-label">' . __('Subscription Length:', 'subs') . '</span>';
+            $preview .= '<span class="subs-preview-value">' . __('Unlimited', 'subs') . '</span>';
+            $preview .= '</div>';
+        }
+
+        // Total first payment calculation
+        $first_payment = $trial_period > 0 ? $signup_fee : ($total_recurring_price + $signup_fee);
+        if ($first_payment > 0) {
+            $preview .= '<div class="subs-preview-highlight">';
+            $preview .= __('First Payment:', 'subs') . ' <strong>' . wc_price($first_payment) . '</strong>';
+            if ($trial_period > 0 && $signup_fee == 0) {
+                $preview .= ' <em>(' . __('Free Trial', 'subs') . ')</em>';
+            }
+            $preview .= '</div>';
+        }
+
+        $preview .= '</div>';
+
+        return $preview;
     }
 
     /**
-     * Get billing period description
+     * Get product subscription plans (for multiple plan support)
+     *
+     * @param int $product_id
+     * @return array
+     */
+    private function get_product_subscription_plans($product_id) {
+        $plans = array();
+
+        // For now, create a single plan based on the product settings
+        $subscription_enabled = get_post_meta($product_id, '_subscription_enabled', true);
+
+        if ($subscription_enabled === 'yes') {
+            $product = wc_get_product($product_id);
+
+            if ($product) {
+                $period = get_post_meta($product_id, '_subscription_period', true) ?: 'month';
+                $interval = get_post_meta($product_id, '_subscription_period_interval', true) ?: 1;
+                $trial_period = get_post_meta($product_id, '_subscription_trial_period', true) ?: 0;
+                $signup_fee = get_post_meta($product_id, '_subscription_signup_fee', true) ?: 0;
+
+                $plans['default'] = array(
+                    'id' => 'default',
+                    'name' => sprintf(__('%s Subscription', 'subs'), $product->get_name()),
+                    'price' => $product->get_price(),
+                    'interval' => $period,
+                    'interval_count' => intval($interval),
+                    'trial_days' => intval($trial_period),
+                    'sign_up_fee' => floatval($signup_fee),
+                    'description' => get_post_meta($product_id, '_subscription_description', true),
+                );
+            }
+        }
+
+        return apply_filters('subs_product_subscription_plans', $plans, $product_id);
+    }
+
+    /**
+     * Get billing description
      *
      * @param string $period
      * @param int $interval
      * @return string
      */
-    private function get_billing_description($period, $interval) {
-        $intervals = intval($interval);
+    private function get_billing_description($period, $interval = 1) {
+        $interval = max(1, intval($interval));
 
-        $periods = array(
-            'day'   => _n('day', 'days', $intervals, 'subs'),
-            'week'  => _n('week', 'weeks', $intervals, 'subs'),
-            'month' => _n('month', 'months', $intervals, 'subs'),
-            'year'  => _n('year', 'years', $intervals, 'subs'),
-        );
-
-        $period_text = isset($periods[$period]) ? $periods[$period] : $period;
-
-        if ($intervals == 1) {
-            return sprintf(__('Every %s', 'subs'), $period_text);
-        } else {
-            return sprintf(__('Every %d %s', 'subs'), $intervals, $period_text);
+        switch ($period) {
+            case 'day':
+                return $interval === 1 ? __('day', 'subs') : sprintf(__('%d days', 'subs'), $interval);
+            case 'week':
+                return $interval === 1 ? __('week', 'subs') : sprintf(__('%d weeks', 'subs'), $interval);
+            case 'month':
+                return $interval === 1 ? __('month', 'subs') : sprintf(__('%d months', 'subs'), $interval);
+            case 'year':
+                return $interval === 1 ? __('year', 'subs') : sprintf(__('%d years', 'subs'), $interval);
+            default:
+                return $period;
         }
     }
 
     /**
-     * Get subscription product data for external use
+     * Calculate sample Stripe fee
      *
-     * @param int $product_id
-     * @return array|false
+     * @param float $amount
+     * @return float
      */
-    public static function get_subscription_data($product_id) {
-        if (get_post_meta($product_id, '_subscription_enabled', true) !== 'yes') {
+    private function calculate_sample_stripe_fee($amount) {
+        $percentage = floatval(get_option('subs_stripe_fee_percentage', 2.9)) / 100;
+        $fixed = floatval(get_option('subs_stripe_fee_fixed', 30)) / 100; // Convert cents to dollars
+
+        return ($amount * $percentage) + $fixed;
+    }
+
+    /**
+     * Check if Stripe is configured
+     *
+     * @return bool
+     */
+    private function is_stripe_configured() {
+        $test_mode = get_option('subs_stripe_test_mode', 'yes') === 'yes';
+
+        if ($test_mode) {
+            $publishable_key = get_option('subs_stripe_test_publishable_key', '');
+            $secret_key = get_option('subs_stripe_test_secret_key', '');
+        } else {
+            $publishable_key = get_option('subs_stripe_live_publishable_key', '');
+            $secret_key = get_option('subs_stripe_live_secret_key', '');
+        }
+
+        return !empty($publishable_key) && !empty($secret_key);
+    }
+
+    /**
+     * Check if product is subscription enabled
+     *
+     * @param int|WC_Product $product
+     * @return bool
+     */
+    public static function is_subscription_product($product) {
+        if (is_numeric($product)) {
+            $product_id = $product;
+        } elseif (is_a($product, 'WC_Product')) {
+            $product_id = $product->get_id();
+        } else {
             return false;
         }
 
-        return array(
-            'enabled'                => true,
-            'period'                 => get_post_meta($product_id, '_subscription_period', true) ?: 'month',
-            'interval'               => intval(get_post_meta($product_id, '_subscription_period_interval', true) ?: 1),
-            'trial_period'           => intval(get_post_meta($product_id, '_subscription_trial_period', true) ?: 0),
-            'signup_fee'             => floatval(get_post_meta($product_id, '_subscription_signup_fee', true) ?: 0),
-            'limit'                  => intval(get_post_meta($product_id, '_subscription_limit', true) ?: 0),
-            'length'                 => intval(get_post_meta($product_id, '_subscription_length', true) ?: 0),
-            'one_time_shipping'      => get_post_meta($product_id, '_subscription_one_time_shipping', true) === 'yes',
-            'prorate_renewal'        => get_post_meta($product_id, '_subscription_prorate_renewal', true) === 'yes',
-            'virtual_required'       => get_post_meta($product_id, '_subscription_virtual_required', true) === 'yes',
-            'include_stripe_fees'    => get_post_meta($product_id, '_subscription_include_stripe_fees', true) !== 'no',
-        );
-    }
-
-    /**
-     * Check if product has subscription enabled
-     *
-     * @param int $product_id
-     * @return bool
-     */
-    public static function is_subscription_product($product_id) {
         return get_post_meta($product_id, '_subscription_enabled', true) === 'yes';
     }
 
     /**
-     * Get subscription products
-     *
-     * @param array $args
-     * @return array
-     */
-    public static function get_subscription_products($args = array()) {
-        $defaults = array(
-            'post_type'      => 'product',
-            'post_status'    => 'publish',
-            'posts_per_page' => -1,
-            'meta_query'     => array(
-                array(
-                    'key'     => '_subscription_enabled',
-                    'value'   => 'yes',
-                    'compare' => '='
-                )
-            )
-        );
-
-        $args = wp_parse_args($args, $defaults);
-
-        return get_posts($args);
-    }
-
-    /**
-     * Validate subscription product settings
+     * Get subscription settings for a product
      *
      * @param int $product_id
-     * @return array Array of validation errors (empty if valid)
+     * @return array
      */
-    public static function validate_subscription_product($product_id) {
-        $errors = array();
-        $product = wc_get_product($product_id);
-
-        if (!$product) {
-            $errors[] = __('Product not found.', 'subs');
-            return $errors;
+    public static function get_subscription_settings($product_id) {
+        if (!self::is_subscription_product($product_id)) {
+            return array();
         }
 
-        if (get_post_meta($product_id, '_subscription_enabled', true) !== 'yes') {
-            return $errors; // Not a subscription product, no validation needed
-        }
-
-        // Check required fields
-        $period = get_post_meta($product_id, '_subscription_period', true);
-        $interval = get_post_meta($product_id, '_subscription_period_interval', true);
-
-        if (empty($period)) {
-            $errors[] = __('Subscription period is required.', 'subs');
-        } elseif (!in_array($period, array('day', 'week', 'month', 'year'))) {
-            $errors[] = __('Invalid subscription period.', 'subs');
-        }
-
-        if (empty($interval) || intval($interval) < 1) {
-            $errors[] = __('Subscription interval must be at least 1.', 'subs');
-        }
-
-        // Validate trial period
-        $trial_period = get_post_meta($product_id, '_subscription_trial_period', true);
-        if ($trial_period !== '' && intval($trial_period) < 0) {
-            $errors[] = __('Trial period cannot be negative.', 'subs');
-        }
-
-        // Validate signup fee
-        $signup_fee = get_post_meta($product_id, '_subscription_signup_fee', true);
-        if ($signup_fee !== '' && floatval($signup_fee) < 0) {
-            $errors[] = __('Signup fee cannot be negative.', 'subs');
-        }
-
-        // Validate subscription limit
-        $limit = get_post_meta($product_id, '_subscription_limit', true);
-        if ($limit !== '' && intval($limit) < 1) {
-            $errors[] = __('Subscription limit must be at least 1.', 'subs');
-        }
-
-        // Validate subscription length
-        $length = get_post_meta($product_id, '_subscription_length', true);
-        if ($length !== '' && intval($length) < 1) {
-            $errors[] = __('Subscription length must be at least 1.', 'subs');
-        }
-
-        // Check if product has a price
-        if (!$product->get_price() || floatval($product->get_price()) <= 0) {
-            $errors[] = __('Subscription products must have a price greater than 0.', 'subs');
-        }
-
-        // Check for conflicting settings
-        if ($product->is_virtual() && get_post_meta($product_id, '_subscription_one_time_shipping', true) === 'yes') {
-            $errors[] = __('Virtual products cannot have one-time shipping enabled.', 'subs');
-        }
-
-        return $errors;
+        return array(
+            'enabled' => true,
+            'period' => get_post_meta($product_id, '_subscription_period', true) ?: 'month',
+            'interval' => intval(get_post_meta($product_id, '_subscription_period_interval', true) ?: 1),
+            'trial_period' => intval(get_post_meta($product_id, '_subscription_trial_period', true) ?: 0),
+            'signup_fee' => floatval(get_post_meta($product_id, '_subscription_signup_fee', true) ?: 0),
+            'limit' => intval(get_post_meta($product_id, '_subscription_limit', true) ?: 0),
+            'length' => intval(get_post_meta($product_id, '_subscription_length', true) ?: 0),
+            'one_time_shipping' => get_post_meta($product_id, '_subscription_one_time_shipping', true) === 'yes',
+            'prorate_renewal' => get_post_meta($product_id, '_subscription_prorate_renewal', true) === 'yes',
+            'virtual_required' => get_post_meta($product_id, '_subscription_virtual_required', true) === 'yes',
+            'include_stripe_fees' => get_post_meta($product_id, '_subscription_include_stripe_fees', true) === 'yes',
+            'description' => get_post_meta($product_id, '_subscription_description', true),
+            'benefits' => get_post_meta($product_id, '_subscription_benefits', true),
+        );
     }
 
     /**
@@ -819,18 +1038,18 @@ class Subs_Admin_Product_Settings {
      * @return array
      */
     public static function export_subscription_settings($product_id) {
-        $subscription_data = self::get_subscription_data($product_id);
+        $product = wc_get_product($product_id);
 
-        if (!$subscription_data) {
+        if (!$product) {
             return array();
         }
 
-        $product = wc_get_product($product_id);
+        $subscription_data = self::get_subscription_settings($product_id);
 
         return array(
             'product_id'              => $product_id,
-            'product_name'            => $product ? $product->get_name() : '',
-            'product_sku'             => $product ? $product->get_sku() : '',
+            'product_name'            => $product->get_name(),
+            'product_sku'             => $product->get_sku(),
             'subscription_settings'   => $subscription_data,
             'export_date'             => current_time('mysql'),
         );
@@ -866,6 +1085,8 @@ class Subs_Admin_Product_Settings {
             'prorate_renewal'        => '_subscription_prorate_renewal',
             'virtual_required'       => '_subscription_virtual_required',
             'include_stripe_fees'    => '_subscription_include_stripe_fees',
+            'description'            => '_subscription_description',
+            'benefits'               => '_subscription_benefits',
         );
 
         foreach ($meta_mapping as $setting_key => $meta_key) {
@@ -881,99 +1102,100 @@ class Subs_Admin_Product_Settings {
             }
         }
 
-        // Validate the imported settings
-        $errors = self::validate_subscription_product($product_id);
-        if (!empty($errors)) {
-            return new WP_Error('validation_failed', implode(' ', $errors));
-        }
+        do_action('subs_product_subscription_settings_imported', $product_id, $settings);
 
         return true;
     }
 
     /**
-     * Get subscription product statistics
+     * Get subscription products
      *
+     * @param array $args
      * @return array
      */
-    public static function get_subscription_product_stats() {
-        global $wpdb;
-
-        // Total products with subscriptions enabled
-        $total_subscription_products = $wpdb->get_var(
-            "SELECT COUNT(*) FROM {$wpdb->postmeta} pm
-             INNER JOIN {$wpdb->posts} p ON pm.post_id = p.ID
-             WHERE pm.meta_key = '_subscription_enabled'
-             AND pm.meta_value = 'yes'
-             AND p.post_status = 'publish'
-             AND p.post_type = 'product'"
+    public static function get_subscription_products($args = array()) {
+        $defaults = array(
+            'post_type'      => 'product',
+            'post_status'    => 'publish',
+            'posts_per_page' => -1,
+            'meta_query'     => array(
+                array(
+                    'key'   => '_subscription_enabled',
+                    'value' => 'yes',
+                ),
+            ),
         );
 
-        // Products by billing period
-        $period_stats = $wpdb->get_results(
-            "SELECT pm2.meta_value as period, COUNT(*) as count
-             FROM {$wpdb->postmeta} pm1
-             INNER JOIN {$wpdb->postmeta} pm2 ON pm1.post_id = pm2.post_id
-             INNER JOIN {$wpdb->posts} p ON pm1.post_id = p.ID
-             WHERE pm1.meta_key = '_subscription_enabled'
-             AND pm1.meta_value = 'yes'
-             AND pm2.meta_key = '_subscription_period'
-             AND p.post_status = 'publish'
-             AND p.post_type = 'product'
-             GROUP BY pm2.meta_value"
-        );
+        $args = wp_parse_args($args, $defaults);
+        $posts = get_posts($args);
 
-        // Products with trials
-        $trial_products = $wpdb->get_var(
-            "SELECT COUNT(*) FROM {$wpdb->postmeta} pm1
-             INNER JOIN {$wpdb->postmeta} pm2 ON pm1.post_id = pm2.post_id
-             INNER JOIN {$wpdb->posts} p ON pm1.post_id = p.ID
-             WHERE pm1.meta_key = '_subscription_enabled'
-             AND pm1.meta_value = 'yes'
-             AND pm2.meta_key = '_subscription_trial_period'
-             AND pm2.meta_value > 0
-             AND p.post_status = 'publish'
-             AND p.post_type = 'product'"
-        );
+        $products = array();
+        foreach ($posts as $post) {
+            $product = wc_get_product($post->ID);
+            if ($product) {
+                $products[] = $product;
+            }
+        }
 
-        return array(
-            'total_subscription_products' => intval($total_subscription_products),
-            'trial_products'              => intval($trial_products),
-            'period_distribution'         => $period_stats,
-        );
+        return $products;
     }
 
     /**
-     * Cleanup orphaned subscription product data
+     * Convert regular product to subscription product
      *
-     * @return int Number of cleaned up records
+     * @param int $product_id
+     * @param array $subscription_settings
+     * @return bool|WP_Error
      */
-    public static function cleanup_orphaned_data() {
-        global $wpdb;
+    public static function convert_to_subscription_product($product_id, $subscription_settings = array()) {
+        $product = wc_get_product($product_id);
 
-        $subscription_meta_keys = array(
-            '_subscription_enabled',
-            '_subscription_period',
-            '_subscription_period_interval',
-            '_subscription_trial_period',
-            '_subscription_signup_fee',
-            '_subscription_limit',
-            '_subscription_length',
-            '_subscription_one_time_shipping',
-            '_subscription_prorate_renewal',
-            '_subscription_virtual_required',
-            '_subscription_include_stripe_fees',
+        if (!$product) {
+            return new WP_Error('product_not_found', __('Product not found.', 'subs'));
+        }
+
+        // Set default subscription settings
+        $defaults = array(
+            'period' => 'month',
+            'interval' => 1,
+            'trial_period' => 0,
+            'signup_fee' => 0,
         );
 
-        $placeholders = implode(',', array_fill(0, count($subscription_meta_keys), '%s'));
+        $settings = wp_parse_args($subscription_settings, $defaults);
 
-        $cleaned_up = $wpdb->query($wpdb->prepare(
-            "DELETE pm FROM {$wpdb->postmeta} pm
-             LEFT JOIN {$wpdb->posts} p ON pm.post_id = p.ID
-             WHERE pm.meta_key IN ($placeholders)
-             AND (p.ID IS NULL OR p.post_type != 'product')",
-            $subscription_meta_keys
-        ));
+        // Enable subscription
+        update_post_meta($product_id, '_subscription_enabled', 'yes');
 
-        return intval($cleaned_up);
+        // Apply settings
+        foreach ($settings as $key => $value) {
+            $meta_key = '_subscription_' . $key;
+            update_post_meta($product_id, $meta_key, $value);
+        }
+
+        do_action('subs_product_converted_to_subscription', $product_id, $settings);
+
+        return true;
+    }
+
+    /**
+     * Convert subscription product to regular product
+     *
+     * @param int $product_id
+     * @return bool|WP_Error
+     */
+    public static function convert_to_regular_product($product_id) {
+        $product = wc_get_product($product_id);
+
+        if (!$product) {
+            return new WP_Error('product_not_found', __('Product not found.', 'subs'));
+        }
+
+        // Disable subscription
+        update_post_meta($product_id, '_subscription_enabled', 'no');
+
+        do_action('subs_product_converted_to_regular', $product_id);
+
+        return true;
     }
 }
