@@ -1,0 +1,883 @@
+/**
+ * Subs Frontend CSS
+ *
+ * Frontend styles for subscription functionality
+ *
+ * @package Subs
+ * @version 1.0.0
+ */
+
+/* ==========================================================================
+   Subscription Options (Product Page)
+   ========================================================================== */
+
+.subs-subscription-options {
+    margin: 20px 0;
+    padding: 20px;
+    border: 2px solid #e1e1e1;
+    border-radius: 8px;
+    background: #f9f9f9;
+}
+
+.subs-subscription-options h3 {
+    margin-top: 0;
+    color: #333;
+    font-size: 1.2em;
+}
+
+.subs-enable-subscription {
+    margin-right: 10px;
+}
+
+.subs-subscription-details {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+    display: none;
+}
+
+.subs-billing-options {
+    display: flex;
+    gap: 15px;
+    margin: 10px 0;
+    flex-wrap: wrap;
+}
+
+.subs-billing-options label {
+    display: flex;
+    align-items: center;
+    font-weight: normal;
+}
+
+.subs-pricing-display {
+    margin-top: 15px;
+    padding: 15px;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+.subs-pricing-display.loading {
+    opacity: 0.6;
+    position: relative;
+}
+
+.subs-pricing-display.loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #ccc;
+    border-top-color: #333;
+    border-radius: 50%;
+    animation: subs-spin 1s linear infinite;
+}
+
+@keyframes subs-spin {
+    to { transform: rotate(360deg); }
+}
+
+.subs-price-breakdown p {
+    margin: 5px 0;
+    display: flex;
+    justify-content: space-between;
+}
+
+.subs-base-price {
+    color: #666;
+}
+
+.subs-stripe-fee {
+    color: #999;
+    font-size: 0.9em;
+}
+
+.subs-total-price {
+    font-weight: bold;
+    font-size: 1.1em;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+.subs-billing-info {
+    color: #666;
+    font-style: italic;
+    margin-top: 10px;
+}
+
+/* ==========================================================================
+   Subscription Management (Account Page)
+   ========================================================================== */
+
+.subs-subscriptions-container {
+    max-width: 100%;
+}
+
+.subs-subscription-item {
+    margin-bottom: 30px;
+    border: 1px solid #e1e1e1;
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+}
+
+.subs-subscription-header {
+    padding: 20px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e1e1e1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.subs-subscription-title {
+    margin: 0;
+    font-size: 1.3em;
+}
+
+.subs-subscription-title a {
+    color: #333;
+    text-decoration: none;
+}
+
+.subs-subscription-title a:hover {
+    color: #0073aa;
+}
+
+.subs-status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.subs-status-active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.subs-status-paused {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.subs-status-cancelled {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.subs-status-past_due {
+    background: #f5c6cb;
+    color: #721c24;
+}
+
+.subs-status-trialing {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.subs-subscription-content {
+    padding: 20px;
+}
+
+.subs-subscription-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.subs-subscription-detail {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.subs-subscription-detail h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 0.9em;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.subs-subscription-detail p {
+    margin: 0;
+    font-size: 1.1em;
+}
+
+.subs-subscription-actions {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e1e1e1;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+
+.subs-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.subs-btn:hover {
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+
+.subs-btn-primary {
+    background: #0073aa;
+    color: white;
+}
+
+.subs-btn-primary:hover {
+    background: #005a87;
+    color: white;
+}
+
+.subs-btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.subs-btn-secondary:hover {
+    background: #5a6268;
+    color: white;
+}
+
+.subs-btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.subs-btn-success:hover {
+    background: #218838;
+    color: white;
+}
+
+.subs-btn-warning {
+    background: #ffc107;
+    color: #212529;
+}
+
+.subs-btn-warning:hover {
+    background: #e0a800;
+    color: #212529;
+}
+
+.subs-btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.subs-btn-danger:hover {
+    background: #c82333;
+    color: white;
+}
+
+.subs-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ==========================================================================
+   Modals
+   ========================================================================== */
+
+.subs-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+}
+
+.subs-modal {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.subs-modal-large {
+    max-width: 600px;
+}
+
+.subs-modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #e1e1e1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.subs-modal-header h3 {
+    margin: 0;
+    font-size: 1.3em;
+}
+
+.subs-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.subs-modal-close:hover {
+    color: #333;
+}
+
+.subs-modal-content {
+    padding: 20px;
+}
+
+.subs-modal-footer {
+    padding: 20px;
+    border-top: 1px solid #e1e1e1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* ==========================================================================
+   Forms
+   ========================================================================== */
+
+.subs-form-group {
+    margin-bottom: 20px;
+}
+
+.subs-form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #333;
+}
+
+.subs-form-group input,
+.subs-form-group textarea,
+.subs-form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.subs-form-group textarea {
+    height: 80px;
+    resize: vertical;
+}
+
+.subs-field-error {
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 5px;
+    display: block;
+}
+
+.subs-saving {
+    color: #666;
+    font-size: 12px;
+    margin-left: 10px;
+    font-style: italic;
+}
+
+/* ==========================================================================
+   Notices
+   ========================================================================== */
+
+.subs-notice {
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.subs-notice p {
+    margin: 0;
+    flex: 1;
+}
+
+.subs-notice-success {
+    background: #d4edda;
+    color: #155724;
+    border-left: 4px solid #28a745;
+}
+
+.subs-notice-error {
+    background: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
+.subs-notice-info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border-left: 4px solid #17a2b8;
+}
+
+.subs-notice-warning {
+    background: #fff3cd;
+    color: #856404;
+    border-left: 4px solid #ffc107;
+}
+
+.subs-notice-dismiss {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.7;
+    padding: 0;
+    margin-left: 15px;
+}
+
+.subs-notice-dismiss:hover {
+    opacity: 1;
+}
+
+/* ==========================================================================
+   Subscription History
+   ========================================================================== */
+
+.subs-history-container {
+    margin-top: 20px;
+}
+
+.subs-load-history {
+    background: none;
+    border: none;
+    color: #0073aa;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+    font-size: 14px;
+}
+
+.subs-load-history:hover {
+    color: #005a87;
+}
+
+.subs-history-list {
+    margin-top: 15px;
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #e1e1e1;
+    border-radius: 4px;
+}
+
+.subs-history-item {
+    padding: 10px 15px;
+    border-bottom: 1px solid #f0f0f0;
+    display: grid;
+    grid-template-columns: 120px 100px 1fr;
+    gap: 15px;
+    align-items: start;
+}
+
+.subs-history-item:last-child {
+    border-bottom: none;
+}
+
+.subs-history-date {
+    font-size: 12px;
+    color: #666;
+    font-weight: 600;
+}
+
+.subs-history-action {
+    font-size: 12px;
+    text-transform: uppercase;
+    background: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: #495057;
+}
+
+.subs-history-note {
+    font-size: 13px;
+    color: #333;
+}
+
+/* ==========================================================================
+   Subscription Details Toggle
+   ========================================================================== */
+
+.subs-view-details {
+    background: none;
+    border: none;
+    color: #0073aa;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.subs-view-details:hover {
+    color: #005a87;
+}
+
+.subs-toggle-icon {
+    transition: transform 0.2s ease;
+}
+
+.subs-toggle-icon.rotated {
+    transform: rotate(180deg);
+}
+
+.subs-subscription-details {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #e1e1e1;
+}
+
+/* ==========================================================================
+   Payment Elements (Stripe)
+   ========================================================================== */
+
+#payment-element {
+    margin-bottom: 20px;
+}
+
+#payment-message {
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 4px;
+}
+
+#payment-message.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+#payment-message.hidden {
+    display: none;
+}
+
+/* ==========================================================================
+   Checkout Integration
+   ========================================================================== */
+
+.subs-checkout-subscription {
+    margin: 20px 0;
+    padding: 20px;
+    background: #f8f9fa;
+    border: 1px solid #e1e1e1;
+    border-radius: 4px;
+}
+
+.subs-checkout-subscription h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.subs-flag-address-field {
+    margin-top: 15px;
+}
+
+.subs-flag-address-field label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.subs-flag-address-field textarea {
+    width: 100%;
+    height: 80px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: inherit;
+    resize: vertical;
+}
+
+/* ==========================================================================
+   Dashboard Widget
+   ========================================================================== */
+
+.subs-dashboard-widget {
+    background: white;
+    border: 1px solid #e1e1e1;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.subs-dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.subs-stat-item {
+    text-align: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.subs-stat-number {
+    font-size: 2em;
+    font-weight: bold;
+    color: #0073aa;
+    display: block;
+}
+
+.subs-stat-label {
+    color: #666;
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+.subs-upcoming-renewals {
+    margin-top: 20px;
+}
+
+.subs-upcoming-renewals h4 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.subs-renewal-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: #f8f9fa;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    border-left: 4px solid #0073aa;
+}
+
+.subs-renewal-date {
+    font-weight: 600;
+    color: #333;
+}
+
+.subs-renewal-amount {
+    color: #0073aa;
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .subs-subscription-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .subs-subscription-actions {
+        flex-direction: column;
+    }
+
+    .subs-subscription-actions .subs-btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .subs-billing-options {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .subs-modal {
+        margin: 10px;
+        max-height: calc(100vh - 20px);
+    }
+
+    .subs-modal-footer {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .subs-modal-footer .subs-btn {
+        width: 100%;
+    }
+
+    .subs-history-item {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+
+    .subs-history-date {
+        font-weight: bold;
+    }
+
+    .subs-subscription-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .subs-dashboard-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .subs-renewal-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+}
+
+@media (max-width: 480px) {
+    .subs-subscription-options,
+    .subs-subscription-item,
+    .subs-dashboard-widget {
+        margin-left: -10px;
+        margin-right: -10px;
+        border-radius: 0;
+    }
+
+    .subs-modal {
+        margin: 0;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+
+    .subs-subscription-content,
+    .subs-subscription-header {
+        padding: 15px;
+    }
+}
+
+/* ==========================================================================
+   Print Styles
+   ========================================================================== */
+
+@media print {
+    .subs-subscription-actions,
+    .subs-btn,
+    .subs-modal-overlay {
+        display: none !important;
+    }
+
+    .subs-subscription-item {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .subs-subscription-header {
+        background: white !important;
+        -webkit-print-color-adjust: exact;
+    }
+}
+
+/* ==========================================================================
+   Animation Utilities
+   ========================================================================== */
+
+.subs-fade-in {
+    opacity: 0;
+    animation: subs-fadeIn 0.3s ease-in-out forwards;
+}
+
+@keyframes subs-fadeIn {
+    to { opacity: 1; }
+}
+
+.subs-slide-down {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.subs-slide-down.open {
+    max-height: 500px;
+}
+
+/* ==========================================================================
+   Accessibility Improvements
+   ========================================================================== */
+
+.subs-btn:focus,
+.subs-form-group input:focus,
+.subs-form-group textarea:focus,
+.subs-form-group select:focus {
+    outline: 2px solid #0073aa;
+    outline-offset: 2px;
+}
+
+.subs-modal:focus {
+    outline: none;
+}
+
+.subs-modal-close:focus {
+    outline: 2px solid #0073aa;
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ==========================================================================
+   High Contrast Mode
+   ========================================================================== */
+
+@media (prefers-contrast: high) {
+    .subs-subscription-options,
+    .subs-subscription-item,
+    .subs-modal {
+        border-width: 2px;
+    }
+
+    .subs-btn {
+        border: 2px solid;
+    }
+
+    .subs-status-badge {
+        border: 1px solid;
+    }
+}

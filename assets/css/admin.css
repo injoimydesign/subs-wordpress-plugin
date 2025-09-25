@@ -1,0 +1,862 @@
+/**
+ * Subs Admin CSS
+ *
+ * Admin interface styles for subscription management
+ *
+ * @package Subs
+ * @version 1.0.0
+ */
+
+/* ==========================================================================
+   Admin Dashboard
+   ========================================================================== */
+
+.subs-admin-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.subs-admin-header h1 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.subs-admin-header .dashicons {
+    font-size: 30px;
+    color: #0073aa;
+}
+
+/* ==========================================================================
+   Settings Page
+   ========================================================================== */
+
+.subs-settings-container .nav-tab-wrapper {
+    margin-bottom: 20px;
+}
+
+.subs-settings-section {
+    background: white;
+    padding: 20px;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.subs-settings-section h3 {
+    margin-top: 0;
+    color: #23282d;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.subs-webhook-url {
+    background: #f1f1f1;
+    padding: 10px;
+    border-radius: 4px;
+    font-family: monospace;
+    word-break: break-all;
+    margin-top: 5px;
+}
+
+.subs-setting-description {
+    color: #666;
+    font-style: italic;
+    margin-top: 5px;
+}
+
+/* ==========================================================================
+   Subscriptions List Table
+   ========================================================================== */
+
+.wp-list-table .column-subscription_id {
+    width: 80px;
+}
+
+.wp-list-table .column-customer {
+    width: 150px;
+}
+
+.wp-list-table .column-product {
+    width: 200px;
+}
+
+.wp-list-table .column-status {
+    width: 100px;
+}
+
+.wp-list-table .column-amount {
+    width: 100px;
+}
+
+.wp-list-table .column-next_payment {
+    width: 120px;
+}
+
+.subs-status-badge {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+.subs-status-active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.subs-status-paused {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.subs-status-cancelled {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.subs-status-past_due {
+    background: #f5c6cb;
+    color: #721c24;
+}
+
+.subs-status-trialing {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.subs-status-pending {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.subs-customer-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.subs-customer-name {
+    font-weight: 600;
+}
+
+.subs-customer-email {
+    color: #666;
+    font-size: 12px;
+}
+
+.subs-product-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.subs-product-name {
+    font-weight: 600;
+}
+
+.subs-product-billing {
+    color: #666;
+    font-size: 12px;
+}
+
+/* ==========================================================================
+   Subscription Edit Page
+   ========================================================================== */
+
+.subs-edit-container {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.subs-main-content {
+    background: white;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+}
+
+.subs-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.subs-metabox {
+    background: white;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+}
+
+.subs-metabox-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid #eee;
+    background: #f9f9f9;
+    font-weight: 600;
+    color: #23282d;
+}
+
+.subs-metabox-content {
+    padding: 16px;
+}
+
+.subs-field-group {
+    margin-bottom: 20px;
+}
+
+.subs-field-group:last-child {
+    margin-bottom: 0;
+}
+
+.subs-field-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #23282d;
+}
+
+.subs-field-group input,
+.subs-field-group select,
+.subs-field-group textarea {
+    width: 100%;
+    max-width: 400px;
+}
+
+.subs-field-group textarea {
+    height: 80px;
+    resize: vertical;
+}
+
+.subs-field-description {
+    color: #666;
+    font-size: 13px;
+    margin-top: 5px;
+    font-style: italic;
+}
+
+.subs-readonly-field {
+    background: #f9f9f9;
+    color: #666;
+    cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Subscription Actions
+   ========================================================================== */
+
+.subs-action-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 15px;
+    background: #f9f9f9;
+    border-top: 1px solid #eee;
+}
+
+.subs-action-buttons .button {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.subs-action-buttons .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.subs-danger-action {
+    background: #d63638 !important;
+    border-color: #d63638 !important;
+    color: white !important;
+}
+
+.subs-danger-action:hover {
+    background: #b32d2e !important;
+    border-color: #b32d2e !important;
+}
+
+.subs-success-action {
+    background: #00a32a !important;
+    border-color: #00a32a !important;
+    color: white !important;
+}
+
+.subs-success-action:hover {
+    background: #008a20 !important;
+    border-color: #008a20 !important;
+}
+
+.subs-warning-action {
+    background: #dba617 !important;
+    border-color: #dba617 !important;
+    color: white !important;
+}
+
+.subs-warning-action:hover {
+    background: #c09c0b !important;
+    border-color: #c09c0b !important;
+}
+
+/* ==========================================================================
+   Subscription History
+   ========================================================================== */
+
+.subs-history-container {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.subs-history-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    display: grid;
+    grid-template-columns: 120px 80px 1fr;
+    gap: 15px;
+    align-items: start;
+}
+
+.subs-history-item:last-child {
+    border-bottom: none;
+}
+
+.subs-history-item:nth-child(even) {
+    background: #f9f9f9;
+}
+
+.subs-history-date {
+    font-size: 12px;
+    color: #666;
+    font-weight: 600;
+}
+
+.subs-history-action {
+    font-size: 11px;
+    text-transform: uppercase;
+    background: #0073aa;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.subs-history-note {
+    font-size: 13px;
+    color: #333;
+    line-height: 1.4;
+}
+
+.subs-add-note-form {
+    padding: 15px;
+    background: #f9f9f9;
+    border-top: 1px solid #eee;
+}
+
+.subs-add-note-form textarea {
+    width: 100%;
+    height: 60px;
+    margin-bottom: 10px;
+}
+
+/* ==========================================================================
+   Statistics and Reports
+   ========================================================================== */
+
+.subs-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.subs-stat-box {
+    background: white;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    padding: 20px;
+    text-align: center;
+}
+
+.subs-stat-box h3 {
+    margin: 0 0 10px 0;
+    color: #23282d;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.subs-stat-number {
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #0073aa;
+    display: block;
+    line-height: 1;
+}
+
+.subs-stat-trend {
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+}
+
+.subs-stat-trend.positive {
+    color: #00a32a;
+}
+
+.subs-stat-trend.negative {
+    color: #d63638;
+}
+
+.subs-charts-container {
+    background: white;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    padding: 20px;
+}
+
+/* ==========================================================================
+   Product Settings Integration
+   ========================================================================== */
+
+.subs-product-options {
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+    margin-top: 15px;
+}
+
+.subs-product-options h4 {
+    margin: 0 0 15px 0;
+    color: #23282d;
+}
+
+.subs-conditional-field {
+    margin-left: 20px;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
+.subs-conditional-field.active {
+    opacity: 1;
+}
+
+/* ==========================================================================
+   Order Integration
+   ========================================================================== */
+
+.subs-order-subscription {
+    margin-top: 20px;
+}
+
+.subs-subscription-summary {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 4px;
+    border-left: 4px solid #0073aa;
+}
+
+.subs-subscription-summary h4 {
+    margin: 0 0 10px 0;
+    color: #23282d;
+}
+
+.subs-subscription-summary .subs-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.subs-subscription-summary .subs-summary-row:last-child {
+    margin-bottom: 0;
+}
+
+.subs-summary-label {
+    font-weight: 600;
+    color: #555;
+}
+
+.subs-summary-value {
+    color: #23282d;
+}
+
+/* ==========================================================================
+   Bulk Actions
+   ========================================================================== */
+
+.subs-bulk-actions {
+    padding: 15px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.subs-bulk-actions select,
+.subs-bulk-actions input {
+    margin-right: 10px;
+}
+
+.subs-bulk-progress {
+    margin-top: 15px;
+    padding: 10px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    display: none;
+}
+
+.subs-progress-bar {
+    width: 100%;
+    height: 20px;
+    background: #f0f0f0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 10px 0;
+}
+
+.subs-progress-fill {
+    height: 100%;
+    background: #0073aa;
+    border-radius: 10px;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.subs-progress-text {
+    text-align: center;
+    font-size: 12px;
+    color: #666;
+}
+
+/* ==========================================================================
+   Notices and Alerts
+   ========================================================================== */
+
+.subs-notice {
+    padding: 12px 16px;
+    margin: 20px 0;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.subs-notice .dashicons {
+    font-size: 20px;
+}
+
+.subs-notice-success {
+    background: #d4edda;
+    color: #155724;
+    border-left: 4px solid #00a32a;
+}
+
+.subs-notice-error {
+    background: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid #d63638;
+}
+
+.subs-notice-warning {
+    background: #fff3cd;
+    color: #856404;
+    border-left: 4px solid #dba617;
+}
+
+.subs-notice-info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border-left: 4px solid #0073aa;
+}
+
+.subs-notice-dismiss {
+    margin-left: auto;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: inherit;
+    opacity: 0.7;
+}
+
+.subs-notice-dismiss:hover {
+    opacity: 1;
+}
+
+/* ==========================================================================
+   Modal Dialogs
+   ========================================================================== */
+
+.subs-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.subs-modal {
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.subs-modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.subs-modal-header h3 {
+    margin: 0;
+    color: #23282d;
+}
+
+.subs-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.subs-modal-close:hover {
+    color: #23282d;
+}
+
+.subs-modal-content {
+    padding: 20px;
+}
+
+.subs-modal-footer {
+    padding: 20px;
+    border-top: 1px solid #ddd;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* ==========================================================================
+   Loading States
+   ========================================================================== */
+
+.subs-loading {
+    opacity: 0.6;
+    pointer-events: none;
+    position: relative;
+}
+
+.subs-loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #ddd;
+    border-top-color: #0073aa;
+    border-radius: 50%;
+    animation: subs-spin 1s linear infinite;
+}
+
+@keyframes subs-spin {
+    to { transform: rotate(360deg); }
+}
+
+.subs-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ddd;
+    border-top-color: #0073aa;
+    border-radius: 50%;
+    animation: subs-spin 1s linear infinite;
+    margin-left: 8px;
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+
+@media (max-width: 1200px) {
+    .subs-edit-container {
+        grid-template-columns: 1fr;
+    }
+
+    .subs-stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .subs-admin-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .subs-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .subs-history-item {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+
+    .subs-action-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .subs-action-buttons .button {
+        justify-content: center;
+    }
+
+    .subs-modal {
+        width: 95%;
+        margin: 20px;
+    }
+}
+
+/* ==========================================================================
+   Print Styles
+   ========================================================================== */
+
+@media print {
+    .subs-action-buttons,
+    .button,
+    .subs-modal-overlay {
+        display: none !important;
+    }
+
+    .subs-metabox,
+    .subs-stat-box {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+}
+
+/* ==========================================================================
+   High Contrast Mode
+   ========================================================================== */
+
+@media (prefers-contrast: high) {
+    .subs-metabox,
+    .subs-stat-box,
+    .subs-modal {
+        border-width: 2px;
+    }
+
+    .button {
+        border-width: 2px;
+    }
+
+    .subs-status-badge {
+        border: 1px solid;
+    }
+}
+
+/* ==========================================================================
+   WordPress Admin Color Scheme Compatibility
+   ========================================================================== */
+
+/* Fresh Color Scheme */
+.admin-color-fresh .subs-stat-number {
+    color: #0073aa;
+}
+
+.admin-color-fresh .subs-history-action {
+    background: #0073aa;
+}
+
+/* Light Color Scheme */
+.admin-color-light .subs-stat-number {
+    color: #04a4cc;
+}
+
+.admin-color-light .subs-history-action {
+    background: #04a4cc;
+}
+
+/* Blue Color Scheme */
+.admin-color-blue .subs-stat-number {
+    color: #096484;
+}
+
+.admin-color-blue .subs-history-action {
+    background: #096484;
+}
+
+/* Coffee Color Scheme */
+.admin-color-coffee .subs-stat-number {
+    color: #59524c;
+}
+
+.admin-color-coffee .subs-history-action {
+    background: #59524c;
+}
+
+/* Ectoplasm Color Scheme */
+.admin-color-ectoplasm .subs-stat-number {
+    color: #523f6d;
+}
+
+.admin-color-ectoplasm .subs-history-action {
+    background: #523f6d;
+}
+
+/* Midnight Color Scheme */
+.admin-color-midnight .subs-stat-number {
+    color: #e14d43;
+}
+
+.admin-color-midnight .subs-history-action {
+    background: #e14d43;
+}
+
+/* Ocean Color Scheme */
+.admin-color-ocean .subs-stat-number {
+    color: #627c83;
+}
+
+.admin-color-ocean .subs-history-action {
+    background: #627c83;
+}
+
+/* Sunrise Color Scheme */
+.admin-color-sunrise .subs-stat-number {
+    color: #dd823b;
+}
+
+.admin-color-sunrise .subs-history-action {
+    background: #dd823b;
+}
