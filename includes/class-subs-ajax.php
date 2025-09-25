@@ -991,4 +991,4 @@ class Subs_Ajax {
             'status_label' => $subscription->get_status_label(),
         ));
     }
-} : 0;
+}

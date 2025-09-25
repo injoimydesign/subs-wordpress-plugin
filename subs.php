@@ -46,6 +46,42 @@ final class Subs {
     protected static $_instance = null;
 
     /**
+     * Admin instance
+     * @var Subs_Admin
+     */
+    public $admin;
+
+    /**
+     * Frontend instance
+     * @var Subs_Frontend
+     */
+    public $frontend;
+
+    /**
+     * AJAX instance
+     * @var Subs_Ajax
+     */
+    public $ajax;
+
+    /**
+     * Stripe instance
+     * @var Subs_Stripe
+     */
+    public $stripe;
+
+    /**
+     * Customer instance
+     * @var Subs_Customer
+     */
+    public $customer;
+
+    /**
+     * Emails instance
+     * @var Subs_Emails
+     */
+    public $emails;
+
+    /**
      * Main Subs Instance
      *
      * Ensures only one instance of Subs is loaded or can be loaded
@@ -79,6 +115,9 @@ final class Subs {
      */
     private function define_constants() {
         // Additional constants can be defined here
+        if (!defined('SUBS_ABSPATH')) {
+            define('SUBS_ABSPATH', dirname(SUBS_PLUGIN_FILE) . '/');
+        }
     }
 
     /**
@@ -87,28 +126,68 @@ final class Subs {
      * @access public
      */
     public function includes() {
-        // Core includes
-        include_once SUBS_PLUGIN_PATH . 'includes/class-subs-install.php';
-        include_once SUBS_PLUGIN_PATH . 'includes/class-subs-subscription.php';
-        include_once SUBS_PLUGIN_PATH . 'includes/class-subs-stripe.php';
-        include_once SUBS_PLUGIN_PATH . 'includes/class-subs-admin.php';
-        include_once SUBS_PLUGIN_PATH . 'includes/class-subs-frontend.php';
-        include_once SUBS_PLUGIN_PATH . 'includes/class-subs-ajax.php';
-        include_once SUBS_PLUGIN_PATH . 'includes/class-subs-customer.php';
-        include_once SUBS_PLUGIN_PATH . 'includes/class-subs-emails.php';
+        // Core includes - with file existence checks to prevent fatal errors
+        $core_files = array(
+            'includes/class-subs-install.php',
+            'includes/class-subs-subscription.php',
+            'includes/class-subs-stripe.php',
+            'includes/class-subs-admin.php',
+            'includes/class-subs-frontend.php',
+            'includes/class-subs-ajax.php',
+            'includes/class-subs-customer.php',
+            'includes/class-subs-emails.php',
+        );
+
+        foreach ($core_files as $file) {
+            $file_path = SUBS_PLUGIN_PATH . $file;
+            if (file_exists($file_path)) {
+                include_once $file_path;
+            } else {
+                // Log missing files for debugging
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log("Subs Plugin: Missing core file - {$file}");
+                }
+            }
+        }
 
         // Admin includes
         if (is_admin()) {
-            include_once SUBS_PLUGIN_PATH . 'includes/admin/class-subs-admin-settings.php';
-            include_once SUBS_PLUGIN_PATH . 'includes/admin/class-subs-admin-subscriptions.php';
-            include_once SUBS_PLUGIN_PATH . 'includes/admin/class-subs-admin-product-settings.php';
+            $admin_files = array(
+                'includes/admin/class-subs-admin-settings.php',
+                'includes/admin/class-subs-admin-subscriptions.php',
+                'includes/admin/class-subs-admin-product-settings.php',
+            );
+
+            foreach ($admin_files as $file) {
+                $file_path = SUBS_PLUGIN_PATH . $file;
+                if (file_exists($file_path)) {
+                    include_once $file_path;
+                } else {
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
+                        error_log("Subs Plugin: Missing admin file - {$file}");
+                    }
+                }
+            }
         }
 
         // Frontend includes
         if (!is_admin() || defined('DOING_AJAX')) {
-            include_once SUBS_PLUGIN_PATH . 'includes/frontend/class-subs-frontend-product.php';
-            include_once SUBS_PLUGIN_PATH . 'includes/frontend/class-subs-frontend-checkout.php';
-            include_once SUBS_PLUGIN_PATH . 'includes/frontend/class-subs-frontend-account.php';
+            $frontend_files = array(
+                'includes/frontend/class-subs-frontend-product.php',
+                'includes/frontend/class-subs-frontend-checkout.php',
+                'includes/frontend/class-subs-frontend-account.php',
+            );
+
+            foreach ($frontend_files as $file) {
+                $file_path = SUBS_PLUGIN_PATH . $file;
+                if (file_exists($file_path)) {
+                    include_once $file_path;
+                } else {
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
+                        error_log("Subs Plugin: Missing frontend file - {$file}");
+                    }
+                }
+            }
         }
     }
 
@@ -137,11 +216,30 @@ final class Subs {
         // Set up localization
         $this->load_plugin_textdomain();
 
-        // Initialize classes
-        $this->admin = new Subs_Admin();
-        $this->frontend = new Subs_Frontend();
-        $this->ajax = new Subs_Ajax();
-        $this->stripe = new Subs_Stripe();
+        // Initialize classes only if they exist to prevent fatal errors
+        if (class_exists('Subs_Admin')) {
+            $this->admin = new Subs_Admin();
+        }
+
+        if (class_exists('Subs_Frontend')) {
+            $this->frontend = new Subs_Frontend();
+        }
+
+        if (class_exists('Subs_Ajax')) {
+            $this->ajax = new Subs_Ajax();
+        }
+
+        if (class_exists('Subs_Stripe')) {
+            $this->stripe = new Subs_Stripe();
+        }
+
+        if (class_exists('Subs_Customer')) {
+            $this->customer = new Subs_Customer();
+        }
+
+        if (class_exists('Subs_Emails')) {
+            $this->emails = new Subs_Emails();
+        }
 
         // Init action
         do_action('subs_init');
@@ -223,6 +321,16 @@ final class Subs {
     public function deactivate() {
         // Cleanup tasks on deactivation
         // Note: We don't delete data on deactivation, only on uninstall
+
+        // Clear scheduled cron events
+        wp_clear_scheduled_hook('subs_process_subscriptions');
+        wp_clear_scheduled_hook('subs_retry_failed_payments');
+        wp_clear_scheduled_hook('subs_send_renewal_notices');
+        wp_clear_scheduled_hook('subs_trial_ending_notifications');
+
+        // Clear any transients
+        delete_transient('subs_stripe_connection_test');
+        delete_transient('subs_subscription_stats');
     }
 
     /**
@@ -260,6 +368,62 @@ final class Subs {
     public function template_path() {
         return apply_filters('subs_template_path', 'subs/');
     }
+
+    /**
+     * Get plugin version
+     *
+     * @return string
+     */
+    public function get_version() {
+        return SUBS_VERSION;
+    }
+
+    /**
+     * Magic getter to prevent deprecated notices
+     *
+     * @param string $key
+     * @return mixed|null
+     */
+    public function __get($key) {
+        // Handle legacy access to properties
+        if (property_exists($this, $key)) {
+            return $this->$key;
+        }
+
+        // Log deprecated access attempts
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("Subs Plugin: Attempting to access undefined property: {$key}");
+        }
+
+        return null;
+    }
+
+    /**
+     * Magic isset to prevent deprecated notices
+     *
+     * @param string $key
+     * @return bool
+     */
+    public function __isset($key) {
+        return property_exists($this, $key);
+    }
+
+    /**
+     * Magic setter to prevent deprecated notices
+     *
+     * @param string $key
+     * @param mixed $value
+     */
+    public function __set($key, $value) {
+        // Prevent setting undefined properties
+        if (property_exists($this, $key)) {
+            $this->$key = $value;
+        } else {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log("Subs Plugin: Attempting to set undefined property: {$key}");
+            }
+        }
+    }
 }
 
 /**
@@ -267,11 +431,17 @@ final class Subs {
  *
  * Returns the main instance of Subs to prevent the need to use globals
  *
+ * @since 1.0.0
  * @return Subs
  */
 function SUBS() {
     return Subs::instance();
 }
 
-// Global for backwards compatibility
+/**
+ * Initialize the plugin
+ */
+SUBS();
+
+// Global for backwards compatibility - deprecated but maintained for legacy code
 $GLOBALS['subs'] = SUBS();
